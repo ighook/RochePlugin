@@ -1,0 +1,4 @@
+name: Roche
+version: '${version}'
+main: org.roche.roche.Roche
+api-version: '1.20'

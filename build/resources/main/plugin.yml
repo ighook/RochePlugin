@@ -1,0 +1,4 @@
+name: Roche
+version: '1.0-SNAPSHOT'
+main: org.roche.roche.Roche
+api-version: '1.20'
