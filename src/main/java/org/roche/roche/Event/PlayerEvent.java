@@ -3,7 +3,6 @@ package org.roche.roche.Event;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +19,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 
 public class PlayerEvent implements Listener {
 
@@ -38,7 +36,7 @@ public class PlayerEvent implements Listener {
             Player player = event.getPlayer();
 
             ResultSet rs = selectPlayerInfo(player);
-            if(rs == null) {
+            if (rs == null) {
                 insertPlayerInfo(player);
             } else {
                 updatePlayerLastLoginTime(player);
@@ -75,14 +73,32 @@ public class PlayerEvent implements Listener {
             event.setCancelled(true);
 
             // 메뉴 생성
-            Inventory inventory = Bukkit.createInventory(null, 6 * 9, "메뉴");
+            Inventory inventory = Bukkit.createInventory(null, 6 * 9, ChatColor.WHITE + "\uF801\uEAAA");
 
-            ItemStack item = new ItemStack(Material.STONE); // 나무 막대 아이템 생성
+            ItemStack item = new ItemStack(Material.GLASS_PANE);
             ItemMeta meta = item.getItemMeta();
 
-            meta.setDisplayName("쓰레기통");
-            meta.setLore(java.util.Arrays.asList("쓰레기통에 아이템을 넣고 닫으면 사라집니다."));
+            if (meta != null) {
+                meta.setDisplayName("쓰레기통");
+                meta.setLore(java.util.Arrays.asList("쓰레기통에 아이템을 넣고 닫으면 사라집니다."));
+                meta.setCustomModelData(1);
+            }
 
+            item.setItemMeta(meta);
+
+            inventory.setItem(53, item);
+
+            // 강화 메뉴
+            item = new ItemStack(Material.GLASS_PANE);
+            meta = item.getItemMeta();
+
+            if (meta != null) {
+                meta.setDisplayName("강화");
+                meta.setLore(java.util.Arrays.asList("강화 메뉴를 엽니다"));
+                meta.setCustomModelData(1);
+            }
+
+            item.setItemMeta(meta);
             inventory.setItem(0, item);
             inventory.setItem(1, item);
             inventory.setItem(9, item);
@@ -99,7 +115,7 @@ public class PlayerEvent implements Listener {
 
         if (item.hasItemMeta() && item.getItemMeta() != null) {
             ItemMeta meta = item.getItemMeta();
-            
+
             // 커스텀 아이템이면
             /*if (meta.hasDisplayName()) {
                 player.sendMessage(ChatColor.RED + "[경고] " + ChatColor.WHITE + "이 아이템은 버릴 수 없습니다");
@@ -167,7 +183,7 @@ public class PlayerEvent implements Listener {
         ItemMeta meta = item.getItemMeta();
         String metaString = null;
 
-        if(meta != null) {
+        if (meta != null) {
             metaString = meta.getAsString();
         }
 
