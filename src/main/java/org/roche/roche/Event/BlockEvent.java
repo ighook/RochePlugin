@@ -1,11 +1,14 @@
 package org.roche.roche.Event;
 
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.Connection;
@@ -26,12 +29,22 @@ public class BlockEvent implements Listener {
     public void onBreakBlock(BlockBreakEvent e) {
         Player p = e.getPlayer();
         saveBlockBreakEvent(p, e.getBlock());
+
+        String blockType = e.getBlock().getType().toString();
+        if(blockType.equals("COBBLESTONE")) {
+            giveGoldToPlayer(p, 1);
+        }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e) {
         Player p = e.getPlayer();
         saveBlockPlaceEvent(p, e.getBlock());
+
+        String blockType = e.getBlock().getType().toString();
+        if(blockType.equals("CHEST")) {
+            BlockData b = e.getBlock().getBlockData();
+        }
     }
 
     private void saveBlockBreakEvent(Player p, Block b) {
@@ -65,6 +78,19 @@ public class BlockEvent implements Listener {
             stmt.executeUpdate();
         } catch (SQLException ex) {
             plugin.getLogger().severe("Error saving block place event to database: " + ex.getMessage());
+        }
+    }
+
+    private void giveGoldToPlayer(Player p, int amount) {
+        String query = "UPDATE tb_player_info SET gold = gold + ? WHERE uuid = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, amount);
+            stmt.setString(2, p.getUniqueId().toString());
+
+            stmt.executeUpdate();
+        } catch (SQLException ex) {
+            plugin.getLogger().severe("Error giving gold to player: " + ex.getMessage());
         }
     }
 }
