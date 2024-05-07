@@ -97,18 +97,12 @@ public final class Roche extends JavaPlugin implements Listener {
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
 
-        // 플레이어가 sneak 상태인지 확인
         if (player.isSneaking()) {
-            // sneak 상태에서 손에 들고 있는 아이템을 교체하는 동작을 처리
-            // 예를 들어, 특정 아이템을 교체할 때 특별한 작업을 수행하도록 코드를 추가할 수 있습니다.
             event.setCancelled(true);
             player.sendMessage("You swapped hands while sneaking!");
 
-            // 플레이어에게 커스텀 아이템을 주는 예시 코드
 //            ItemStack customItem = createCustomItem();
 //            player.getInventory().setItemInMainHand(customItem);
-
-            // 커스텀 창고 열기
 
             Inventory inventory = Bukkit.createInventory(null, 9, "");
             player.openInventory(inventory);
