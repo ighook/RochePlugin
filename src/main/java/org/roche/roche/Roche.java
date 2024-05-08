@@ -1,8 +1,6 @@
 package org.roche.roche;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +12,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.roche.roche.Command.CreateResourceWorldCommand;
 import org.roche.roche.Database.DatabaseConnector;
 import org.roche.roche.Database.DatabaseManager;
 import org.roche.roche.Event.BlockEvent;
@@ -50,7 +49,11 @@ public final class Roche extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new KillEvent(this, conn), this);
         getServer().getPluginManager().registerEvents(new PlayerEvent(this, conn), this);
         getServer().getPluginManager().registerEvents(new InventoryEvent(this, conn), this);
+
+        getCommand("createResourceWorld").setExecutor(new CreateResourceWorldCommand());
         getLogger().info("Roche 플러그인이 활성화되었습니다 [" + time + "]");
+
+
     }
 
     @Override

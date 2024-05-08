@@ -20,165 +20,134 @@ public class InventoryEvent implements Listener {
     private final JavaPlugin plugin;
     private final Connection conn;
 
+    private static final int DIAMOND_COST = 5;
+    private static final int MAX_ENCHANT_LEVEL = 5;
+    private static final int ENCHANTMENT_SLOT = 16;
+    private static final String ENCHANTED_DIAMOND_SWORD_DISPLAY_NAME = "강화된 다이아몬드 검";
+    private static final String TRASH_BIN_TITLE = "쓰레기통";
+    private static final String ENCHANT_INVENTORY_TITLE = "강화";
+
+    private Inventory trashBinGui;
+
     public InventoryEvent(JavaPlugin plugin, Connection conn) {
         this.plugin = plugin;
         this.conn = conn;
+
+        trashBinGui = Bukkit.createInventory(null, 9, TRASH_BIN_TITLE);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
-        Player p = (Player) e.getWhoClicked();
-        String inventoryName = e.getView().getTitle();
+        if (e.getView().getTitle().equals(ChatColor.WHITE + "\uF801\uEAAA")) {
+            handleCustomInventoryClick(e);
+        } else if (e.getView().getTitle().equals(ENCHANT_INVENTORY_TITLE)) {
+            handleEnchantInventoryClick(e);
+        } else if(e.getView().getTitle().equals(TRASH_BIN_TITLE)) {
+            handleTrashBinClick(e);
+        }
+    }
 
-        if (inventoryName.equals(ChatColor.WHITE + "\uF801\uEAAA")) {
-            e.setCancelled(true);
+    private void handleCustomInventoryClick(InventoryClickEvent e) {
+        Player player = (Player) e.getWhoClicked();
+        e.setCancelled(true);
 
-            if (e.getCurrentItem() != null) {
-                String itemName = e.getCurrentItem().getItemMeta().getDisplayName();
-                if (itemName.equals("쓰레기통")) {
-                    p.closeInventory();
+        if (e.getCurrentItem() == null) return;
+        String itemName = e.getCurrentItem().getItemMeta().getDisplayName();
 
-                    Inventory trashInventory = plugin.getServer().createInventory(null, 9, "쓰레기통");
-                    p.openInventory(trashInventory);
-                } else if (itemName.equals("강화")) {
-                    p.closeInventory();
+        switch (itemName) {
+            case "쓰레기통":
+                player.openInventory(trashBinGui);
+                break;
+            case "강화":
+                Inventory enchantInventory = createEnchantedInventory();
+                player.openInventory(enchantInventory);
+                break;
+        }
+    }
 
-                    Inventory enchantInventory = plugin.getServer().createInventory(null, 27, "강화");
+    private Inventory createEnchantedInventory() {
+        Inventory enchantInventory = plugin.getServer().createInventory(null, 27, ENCHANT_INVENTORY_TITLE);
+        ItemStack fillerItem = createFillerItem();
 
-                    ItemStack item = new ItemStack(Material.GLASS_PANE);
-                    ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName("");
+        for (int i = 0; i < 9; i++) {
+            enchantInventory.setItem(i, fillerItem);
+            enchantInventory.setItem(i + 18, fillerItem);
+        }
+        setEnchantInventoryBorders(enchantInventory, fillerItem);
+        return enchantInventory;
+    }
 
-                    item.setItemMeta(meta);
-                    for (int i = 0; i < 9; i++) {
-                        enchantInventory.setItem(i, item);
-                        enchantInventory.setItem(i + 18, item);
-                    }
-                    enchantInventory.setItem(9, item);
-                    enchantInventory.setItem(11, item);
-                    enchantInventory.setItem(12, item);
-                    enchantInventory.setItem(14, item);
-                    enchantInventory.setItem(15, item);
-                    enchantInventory.setItem(17, item);
+    private void setEnchantInventoryBorders(Inventory inventory, ItemStack fillerItem) {
+        int[] borderSlots = {9, 11, 12, 14, 15, 17};
+        for (int slot : borderSlots) {
+            inventory.setItem(slot, fillerItem);
+        }
+    }
 
-                    p.openInventory(enchantInventory);
+    private ItemStack createFillerItem() {
+        ItemStack item = new ItemStack(Material.GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private void handleEnchantInventoryClick(InventoryClickEvent e) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            int clickedSlot = e.getRawSlot();
+            if (clickedSlot != ENCHANTMENT_SLOT) return;
+
+            if (isItemSword(e.getCursor())) {
+                ItemStack materialItem = e.getInventory().getItem(13);
+                reduceMaterialOrClear(materialItem, DIAMOND_COST);
+                e.getInventory().setItem(10, null);
+            } else if (hasRequiredItems(e.getInventory())) {
+                enhanceItem(e.getInventory());
+            } else {
+                e.getInventory().setItem(ENCHANTMENT_SLOT, null);
+            }
+        });
+    }
+
+    private void handleTrashBinClick(InventoryClickEvent e) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            for(int i = 0; i < 9; i++) {
+                if(e.getRawSlot() == i) {
+                    e.getInventory().setItem(i, null);
+                    break;
                 }
             }
-        } else if (inventoryName.equals("강화")) {
-            Bukkit.getScheduler().runTask(plugin, new Runnable() {
-                @Override
-                public void run() {
-                    int clickedSlot = e.getRawSlot();
-                    if (clickedSlot == 16) {
-                        if (e.getCursor().getType().toString().contains("SWORD")) {
-                            plugin.getLogger().info("아이템 제작");
-
-                            int diamondAmount = e.getInventory().getItem(13).getAmount();
-                            if (diamondAmount > 5) {
-                                e.getInventory().getItem(13).setAmount(e.getInventory().getItem(13).getAmount() - 5);
-                            } else {
-                                e.getInventory().setItem(13, null);
-                            }
-                            e.getInventory().setItem(10, null);
-
-
-                            return;
-                        }
-                    }
-
-                    boolean hasEquipment = false;
-                    boolean hasMaterial = false;
-
-
-                    plugin.getLogger().info("클릭한 슬롯: " + clickedSlot);
-
-                    ItemStack item10 = e.getInventory().getItem(10);
-                    if (item10 != null && item10.getType().toString().contains("SWORD")) {
-                        plugin.getLogger().info("강화 아이템이 존재합니다.");
-                        hasEquipment = true;
-                    }
-
-
-                    ItemStack item13 = e.getInventory().getItem(13);
-                    if (item13 != null && item13.getType().equals(Material.DIAMOND)) {
-                        plugin.getLogger().info("강화 재료가 존재합니다.");
-                        hasMaterial = true;
-                    }
-
-                    if (hasEquipment && hasMaterial) {
-                        plugin.getLogger().info("강화 아이템과 강화 재료가 모두 들어왔습니다");
-
-                        int enchantLevel = 0;
-                        int diamondAmount = e.getInventory().getItem(13).getAmount();
-                        plugin.getLogger().info("강화 재료 다이아몬드 개수: " + diamondAmount);
-
-                        if (diamondAmount > 0) {
-                            enchantLevel = Math.min(diamondAmount, 5);
-
-                            ItemStack newItem = new ItemStack(Material.DIAMOND_SWORD);
-
-                            ItemMeta meta = newItem.getItemMeta();
-                            meta.setDisplayName("강화된 다이아몬드 검");
-                            meta.addEnchant(Enchantment.DAMAGE_ALL, enchantLevel, true);
-                            newItem.setItemMeta(meta);
-
-                            e.getInventory().setItem(16, newItem);
-                        }
-                    } else {
-                        e.getInventory().setItem(16, null);
-                    }
-
-
-                }
-            });
-        }
+        });
     }
 
     private boolean isItemSword(ItemStack item) {
         return item != null && item.getType().toString().contains("SWORD");
     }
 
-    private void handleItemCreation(InventoryClickEvent e, int materialSlot, int materialCost) {
-        plugin.getLogger().info("아이템 제작");
-        ItemStack materialItem = e.getInventory().getItem(materialSlot);
-        if (materialItem.getAmount() > materialCost) {
-            materialItem.setAmount(materialItem.getAmount() - materialCost);
-        } else {
-            e.getInventory().setItem(materialSlot, null);
-        }
-        e.getWhoClicked().getInventory().setItem(10, null);
+    private boolean hasRequiredItems(Inventory inventory) {
+        return isItemSword(inventory.getItem(10)) && inventory.getItem(13).getType() == Material.DIAMOND;
     }
 
-    private boolean checkAndLogItems(InventoryClickEvent e, int equipmentSlot, int materialSlot) {
-        boolean hasEquipment = false, hasMaterial = false;
-
-        ItemStack equipmentItem = e.getInventory().getItem(equipmentSlot);
-        if (isItemSword(equipmentItem)) {
-            plugin.getLogger().info("강화 아이템이 존재합니다.");
-            hasEquipment = true;
-        }
-
-        ItemStack materialItem = e.getInventory().getItem(materialSlot);
-        if (materialItem != null && materialItem.getType() == Material.DIAMOND) {
-            plugin.getLogger().info("강화 재료가 존재합니다.");
-            hasMaterial = true;
-        }
-
-        return hasEquipment && hasMaterial;
-    }
-
-    private void enhanceItem(InventoryClickEvent e, int equipmentSlot, int materialSlot, int maxEnchantLevel) {
-        ItemStack materialItem = e.getInventory().getItem(materialSlot);
+    private void enhanceItem(Inventory inventory) {
+        ItemStack materialItem = inventory.getItem(13);
         int diamondAmount = materialItem.getAmount();
-        plugin.getLogger().info("강화 재료 다이아몬드 개수: " + diamondAmount);
+        int enchantLevel = Math.min(diamondAmount, MAX_ENCHANT_LEVEL);
 
-        int enchantLevel = Math.min(diamondAmount, maxEnchantLevel);
         ItemStack newItem = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = newItem.getItemMeta();
-        meta.setDisplayName("강화된 다이아몬드 검");
+        meta.setDisplayName(ENCHANTED_DIAMOND_SWORD_DISPLAY_NAME);
         meta.addEnchant(Enchantment.DAMAGE_ALL, enchantLevel, true);
         newItem.setItemMeta(meta);
 
-        e.getInventory().setItem(16, newItem);
+        inventory.setItem(ENCHANTMENT_SLOT, newItem);
+    }
+
+    private void reduceMaterialOrClear(ItemStack item, int cost) {
+        int newAmount = item.getAmount() - cost;
+        if (newAmount > 0) {
+            item.setAmount(newAmount);
+        } else {
+            item.setType(Material.AIR);
+        }
     }
 }

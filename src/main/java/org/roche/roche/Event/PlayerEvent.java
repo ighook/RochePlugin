@@ -25,9 +25,13 @@ public class PlayerEvent implements Listener {
     private final JavaPlugin plugin;
     private final Connection conn;
 
+    private Inventory mainMenuGui;
+
     public PlayerEvent(JavaPlugin plugin, Connection conn) {
         this.plugin = plugin;
         this.conn = conn;
+
+        createMainMenuGui();
     }
 
     @EventHandler
@@ -71,40 +75,7 @@ public class PlayerEvent implements Listener {
         // 웅크리기 + 왼손 변경
         if (player.isSneaking()) {
             event.setCancelled(true);
-
-            // 메뉴 생성
-            Inventory inventory = Bukkit.createInventory(null, 6 * 9, ChatColor.WHITE + "\uF801\uEAAA");
-
-            ItemStack item = new ItemStack(Material.GLASS_PANE);
-            ItemMeta meta = item.getItemMeta();
-
-            if (meta != null) {
-                meta.setDisplayName("쓰레기통");
-                meta.setLore(java.util.Arrays.asList("쓰레기통에 아이템을 넣고 닫으면 사라집니다."));
-                meta.setCustomModelData(1);
-            }
-
-            item.setItemMeta(meta);
-
-            inventory.setItem(53, item);
-
-            // 강화 메뉴
-            item = new ItemStack(Material.GLASS_PANE);
-            meta = item.getItemMeta();
-
-            if (meta != null) {
-                meta.setDisplayName("강화");
-                meta.setLore(java.util.Arrays.asList("강화 메뉴를 엽니다"));
-                meta.setCustomModelData(1);
-            }
-
-            item.setItemMeta(meta);
-            inventory.setItem(0, item);
-            inventory.setItem(1, item);
-            inventory.setItem(9, item);
-            inventory.setItem(10, item);
-
-            player.openInventory(inventory);
+            player.openInventory(mainMenuGui);
         }
     }
 
@@ -124,6 +95,22 @@ public class PlayerEvent implements Listener {
         }
 
         savePlayerDropEvent(player, item);
+    }
+
+    private void createMainMenuGui() {
+        mainMenuGui = Bukkit.createInventory(null, 6 * 9, ChatColor.WHITE + "\uF801\uEAAA");
+        createTrashBinButton(mainMenuGui);
+    }
+
+    private void createTrashBinButton(Inventory inventory) {
+        ItemStack item = new ItemStack(Material.GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("쓰레기통");
+        meta.setLore(java.util.Arrays.asList("쓰레기통에 아이템을 넣고 닫으면 사라집니다."));
+        meta.setCustomModelData(1);
+        item.setItemMeta(meta);
+
+        inventory.setItem(53, item);
     }
 
     private ResultSet selectPlayerInfo(Player player) {
