@@ -1,18 +1,9 @@
 package org.roche.roche;
 
-import org.bukkit.*;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.roche.roche.Command.CreateResourceWorldCommand;
+import org.roche.roche.Command.MoveWorldCommand;
 import org.roche.roche.Database.DatabaseConnector;
 import org.roche.roche.Database.DatabaseManager;
 import org.roche.roche.Event.BlockEvent;
@@ -21,8 +12,6 @@ import org.roche.roche.Event.KillEvent;
 import org.roche.roche.Event.PlayerEvent;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -51,6 +40,7 @@ public final class Roche extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new InventoryEvent(this, conn), this);
 
         getCommand("createResourceWorld").setExecutor(new CreateResourceWorldCommand());
+        getCommand("moveWorld").setExecutor(new MoveWorldCommand());
         getLogger().info("Roche 플러그인이 활성화되었습니다 [" + time + "]");
 
 
