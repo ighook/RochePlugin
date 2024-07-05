@@ -99,7 +99,22 @@ public class PlayerEvent implements Listener {
 
     private void createMainMenuGui() {
         mainMenuGui = Bukkit.createInventory(null, 6 * 9, ChatColor.WHITE + "\uF801\uEAAA");
+        createStatusButton(mainMenuGui);
         createTrashBinButton(mainMenuGui);
+    }
+
+    private void createStatusButton(Inventory inventory) {
+        ItemStack item = new ItemStack(Material.GLASS_PANE);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName("상태");
+        meta.setLore(java.util.Arrays.asList("플레이어의 상태를 확인합니다."));
+        meta.setCustomModelData(1);
+        item.setItemMeta(meta);
+
+        inventory.setItem(0, item);
+        inventory.setItem(1, item);
+        inventory.setItem(9, item);
+        inventory.setItem(10, item);
     }
 
     private void createTrashBinButton(Inventory inventory) {

@@ -1,0 +1,11 @@
+name: Roche
+version: '${version}'
+main: org.roche.roche.Roche
+api-version: '1.20'
+commands:
+  createResourceWorld:
+    description: Create a new resource world
+    usage: /<command>
+  moveWorld:
+    description: Move a world to a different location
+    usage: /<command>

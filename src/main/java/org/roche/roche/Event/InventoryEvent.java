@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,23 +18,24 @@ import java.sql.Connection;
 
 public class InventoryEvent implements Listener {
 
-    private final JavaPlugin plugin;
-    private final Connection conn;
-
     private static final int DIAMOND_COST = 5;
     private static final int MAX_ENCHANT_LEVEL = 5;
     private static final int ENCHANTMENT_SLOT = 16;
     private static final String ENCHANTED_DIAMOND_SWORD_DISPLAY_NAME = "강화된 다이아몬드 검";
+    private static final String PLAYER_STAT = "상태";
     private static final String TRASH_BIN_TITLE = "쓰레기통";
     private static final String ENCHANT_INVENTORY_TITLE = "강화";
-
-    private Inventory trashBinGui;
+    private final JavaPlugin plugin;
+    private final Connection conn;
+    private final Inventory trashBinGui;
+    private final Inventory playerStatGui;
 
     public InventoryEvent(JavaPlugin plugin, Connection conn) {
         this.plugin = plugin;
         this.conn = conn;
 
         trashBinGui = Bukkit.createInventory(null, 9, TRASH_BIN_TITLE);
+        playerStatGui = Bukkit.createInventory(null, 54, PLAYER_STAT);
     }
 
     @EventHandler
@@ -42,8 +44,10 @@ public class InventoryEvent implements Listener {
             handleCustomInventoryClick(e);
         } else if (e.getView().getTitle().equals(ENCHANT_INVENTORY_TITLE)) {
             handleEnchantInventoryClick(e);
-        } else if(e.getView().getTitle().equals(TRASH_BIN_TITLE)) {
+        } else if (e.getView().getTitle().equals(TRASH_BIN_TITLE)) {
             handleTrashBinClick(e);
+        } else if (e.getView().getTitle().equals(PLAYER_STAT)) {
+            handlePlayerStatClick(e);
         }
     }
 
@@ -61,6 +65,9 @@ public class InventoryEvent implements Listener {
             case "강화":
                 Inventory enchantInventory = createEnchantedInventory();
                 player.openInventory(enchantInventory);
+                break;
+            case "상태":
+                player.openInventory(playerStatGui);
                 break;
         }
     }
@@ -111,13 +118,18 @@ public class InventoryEvent implements Listener {
 
     private void handleTrashBinClick(InventoryClickEvent e) {
         Bukkit.getScheduler().runTask(plugin, () -> {
-            for(int i = 0; i < 9; i++) {
-                if(e.getRawSlot() == i) {
-                    e.getInventory().setItem(i, null);
-                    break;
-                }
+            Player player = (Player) e.getWhoClicked();
+            InventoryView view = player.getOpenInventory();
+            Inventory inventory = view.getTopInventory();
+
+            for (int i = 0; i < 9; i++) {
+                inventory.setItem(i, null);
             }
         });
+    }
+
+    private void handlePlayerStatClick(InventoryClickEvent e) {
+        e.setCancelled(true);
     }
 
     private boolean isItemSword(ItemStack item) {
